@@ -51,7 +51,7 @@ input.addEventListener('keydown', e => {
 		// store prompt if line number was given
 		if (hasLineNumber) {
 			const { fn, para } = validatedPrompt;
-			storePrompt(lineNumber, { fn, para });
+			storePrompt({ lineNumber, fn, para });
 		}
 
 		// execute prompt if no linenumber was given
@@ -95,8 +95,17 @@ const validatePrompt = prompt => {
 };
 
 // store prompt
-const storePrompt = (lineNumber, prompt) => {
-	promptStorage[lineNumber] = prompt;
+const storePrompt = prompt => {
+	// if linenumer already exists -> remove
+	const exists = promptStorage.findIndex(
+		obj => obj.lineNumber === prompt.lineNumber
+	);
+	if (exists !== -1) promptStorage.splice(exists, 1);
+
+	// push and sort new prompt
+	promptStorage.push(prompt);
+	promptStorage.sort((a, b) => a.lineNumber - b.lineNumber);
+	console.log(promptStorage);
 };
 
 // clear input and add output line
@@ -114,14 +123,26 @@ const clog = message => {
 	output.style.height = `${output.scrollHeight - 24}px`;
 };
 
+// debounce
+const sleep = ms => new Promise(res => setTimeout(res, ms));
+
 /* BASIC V2 COMMANDS */
-function promptRun() {
+async function promptRun() {
 	if (!promptStorage.length) return;
 
-	promptStorage.forEach((value, index) => {
-		value.fn(value.para);
-	});
+	const numPrompts = promptStorage.length;
 
+	for (let i = 0; i < numPrompts; i++) {
+		const answer = promptStorage[i].fn(promptStorage[i].para);
+
+		// execute GOTO
+		if (Number.isFinite(answer)) {
+			i = answer - 1;
+		}
+
+		// add delay
+		if (i < numPrompts - 1) await sleep(250);
+	}
 	return;
 }
 
@@ -133,8 +154,9 @@ function promptPrint(para) {
 }
 
 function promptGoto(para) {
-	console.log(`goto: ${para}`);
-	return;
+	const targetLine = promptStorage.findIndex(obj => obj.lineNumber === para);
+	console.log(`goto: ${para} -> ${targetLine}`);
+	return targetLine;
 }
 
 function promptExit() {
