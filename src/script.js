@@ -125,14 +125,15 @@ function promptRun() {
 	return;
 }
 
-function promptPrint(cmd) {
-	if (cmd) {
-		output.textContent += `${cmd}\n`;
+function promptPrint(para) {
+	if (para) {
+		output.textContent += `${para}\n`;
 		output.style.height = `${output.scrollHeight - 24}px`;
 	}
 }
 
-function promptGoto(cmd) {
+function promptGoto(para) {
+	console.log(`goto: ${para}`);
 	return;
 }
 
