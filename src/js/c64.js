@@ -1,3 +1,5 @@
+/** C=64 Basic V2 Interpreter **/
+
 'use strict';
 
 const input = document.querySelector('.input');
@@ -30,7 +32,9 @@ input.addEventListener('blur', () => {
 input.addEventListener('keydown', e => {
 	if (e.key === 'Enter') {
 		const inputValue = input.value.toLowerCase().trim();
-		output.textContent += `${inputValue}\n\n`;
+		input.value = '';
+		input.style.width = '0px';
+		output.textContent += `${inputValue}\n`;
 
 		// save prompt if line number was given
 		const match = inputValue.match(/^\d+\s/);
@@ -43,8 +47,8 @@ input.addEventListener('keydown', e => {
 		const isValidPrompt = validatedPrompt.valid;
 
 		if (!isValidPrompt) {
-			output.textContent += `?Syntax Error\n`;
-			resetInput();
+			output.textContent += `\n?Syntax Error\n`;
+			resetInput(true);
 			return;
 		}
 
@@ -52,15 +56,15 @@ input.addEventListener('keydown', e => {
 		if (hasLineNumber) {
 			const { fn, para } = validatedPrompt;
 			storePrompt({ lineNumber, fn, para });
+			resetInput(false);
 		}
 
 		// execute prompt if no linenumber was given
 		if (!hasLineNumber) {
-			console.log('executing');
-			validatedPrompt.fn(validatedPrompt.para);
+			validatedPrompt.fn(validatedPrompt.para).then(() => {
+				resetInput(true);
+			});
 		}
-
-		resetInput();
 	}
 });
 
@@ -109,18 +113,17 @@ const storePrompt = prompt => {
 };
 
 // clear input and add output line
-const resetInput = () => {
-	output.textContent += `Ready.\n`;
-
+const resetInput = (ready = false) => {
+	if (ready) output.textContent += `\nReady.\n`;
 	output.style.height = `${output.scrollHeight - 24}px`;
-	input.value = '';
-	input.style.width = '0px';
+	output.scrollTop = output.scrollHeight - output.offsetHeight - 24;
 };
 
 // debug log
 const clog = message => {
 	output.textContent += `${message}\n`;
 	output.style.height = `${output.scrollHeight - 24}px`;
+	output.scrollTop = output.scrollHeight - output.offsetHeight - 24;
 };
 
 // debounce
@@ -141,29 +144,29 @@ async function promptRun() {
 		}
 
 		// add delay
-		if (i < numPrompts - 1) await sleep(250);
+		if (i < numPrompts - 1) await sleep(100);
 	}
 	return;
 }
 
-function promptPrint(para) {
+async function promptPrint(para) {
 	if (para) {
 		output.textContent += `${para}\n`;
 		output.style.height = `${output.scrollHeight - 24}px`;
+		output.scrollTop = output.scrollHeight - output.offsetHeight - 24;
 	}
 }
 
-function promptGoto(para) {
+async function promptGoto(para) {
 	const targetLine = promptStorage.findIndex(obj => obj.lineNumber === para);
-	console.log(`goto: ${para} -> ${targetLine}`);
 	return targetLine;
 }
 
-function promptExit() {
+async function promptExit() {
 	return;
 }
 
-function promptClr() {
+async function promptClr() {
 	output.textContent = ``;
 	output.style.height = '0px';
 	input.value = '';
