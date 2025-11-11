@@ -1,0 +1,219 @@
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+
+		<style>
+			body {
+				background-color: #22021d;
+			}
+			@font-face {
+				font-family: 'Kommondore';
+				font-weight: 400;
+				font-style: normal;
+				font-display: swap;
+				src: url('/assets/fonts/Kommondore-1.5.woff2');
+			}
+
+			.output {
+				display: block;
+				width: 60%;
+				margin: 100px auto;
+				padding: 60px 20px;
+				font-family: Kommondore;
+				font-size: 35px;
+				background-color: rgb(17, 137, 158);
+				border: 5px solid rgb(235, 236, 220);
+				color: rgb(235, 236, 220);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="output"></div>
+	</body>
+
+	<script>
+		const variables = {
+			A: 123,
+			AB: 9,
+			B: 2,
+			C: 3,
+			C$: 'TEST',
+			'D%': 3.1415,
+		};
+		const command = '"HELLO " + "WORLD" A + 2 1; 40 + 2 4 * 3; C$; A, B, C';
+		const output = document.querySelector('.output');
+		const operators = ['+', '-', '*', '/', '%'];
+		const outputSeparators = [';', ','];
+		const varTypes = ['$', '%'];
+		let stringmode = false;
+		let nummode = false;
+		let varmode = false;
+		let outputs = [];
+		let buffer = '';
+
+		// tokenize command
+		for (i = 0; i <= command.length; i++) {
+			const char = command[i];
+			let lastType = '';
+
+			// turn stringmode on
+			if (char === '"' && !stringmode) {
+				stringmode = true;
+				continue;
+			}
+
+			// turn stringmode off
+			if (char === '"' && stringmode) {
+				outputs.push({ value: buffer, type: 'string' });
+				stringmode = false;
+				buffer = '';
+				continue;
+			}
+
+			// run stringmode
+			if (stringmode) {
+				buffer += char;
+				continue;
+			}
+
+			// ignore spaces if not in stringmode
+			if (!stringmode && char === ' ') {
+				continue;
+			}
+
+			// turn nummode on
+			if (/^[0-9.]$/.test(char) && !nummode) {
+				nummode = true;
+				buffer += char;
+				continue;
+			}
+
+			// turn nummode off
+			if (!/^[0-9.]$/.test(char) && nummode) {
+				outputs.push({ value: buffer, type: 'number' });
+				buffer = '';
+				nummode = false;
+			}
+
+			// run nummode
+			if (/^[0-9.]$/.test(char) && nummode) {
+				// if decimal is already set, start new number
+				if (char === '.' && buffer.includes('.')) {
+					outputs.push({ value: buffer, type: 'number' });
+					buffer = char;
+					continue;
+				}
+
+				buffer += char;
+				continue;
+			}
+
+			// turn varmode on
+			if (/^[A-Za-z]$/.test(char) && !varmode) {
+				varmode = true;
+				buffer += char;
+				continue;
+			}
+
+			// turn varmode off
+			if (
+				(!/^[A-Za-z]$/.test(char) || varTypes.includes(char)) &&
+				varmode
+			) {
+				if (varTypes.includes(char)) {
+					buffer += char;
+					outputs.push({ value: buffer, type: 'variable' });
+					buffer = '';
+					varmode = false;
+					continue;
+				}
+
+				outputs.push({ value: buffer, type: 'variable' });
+				buffer = '';
+				varmode = false;
+			}
+
+			// run varmode
+			if (/^[A-Za-z]$/.test(char) && varmode) {
+				buffer += char;
+				continue;
+			}
+
+			// operators
+			if (operators.includes(char)) {
+				outputs.push({ value: char, type: 'operator' });
+			}
+
+			// separators
+			if (outputSeparators.includes(char)) {
+				outputs.push({ value: char, type: 'separator' });
+			}
+
+			// variables
+			/*if (/^[A-Za-z]$/.test(char)) {
+				buffer += char;
+			}*/
+
+			/*// skip spaces in nummode
+			if (!stringmode && char === ' ') {
+				continue;
+			}
+
+			// spaces and tabs
+			if ((!stringmode && char === ';') || char === ',') {
+				buffer += ' ';
+			}*/
+
+			// variable
+			/*if (!stringmode && char >= 'A' && char <= 'Z') {
+				let varName = '';
+				let varEnd = false;
+				let lastChar = '';
+
+				// lookahead for full variable name
+				while (/^[A-Za-z $%]$/.test(command[i])) {
+					// skip spaces
+					if (command[i] === ' ') {
+						i++;
+						continue;
+					}
+
+					varName += command[i];
+					lastChar = command[i];
+					i++;
+				}
+
+				// get variable value
+				const typeSuffix = varTypes.includes(lastChar) ? lastChar : '';
+				const varValue = variables[varName];
+
+				// type [string]
+				if (typeSuffix === '$') {
+					console.log('string');
+				}
+
+				// type [int]
+				if (typeSuffix === '') {
+					console.log('int');
+				}
+
+				// type [float]
+				if (typeSuffix === '%') {
+					console.log('float');
+				}
+
+				buffer += varValue;
+
+				buffer = outputSeparators.includes(lastChar)
+					? buffer + ' '
+					: buffer;
+			}*/
+		}
+
+		console.log(outputs);
+
+		output.innerHTML = buffer;
+	</script>
+</html>

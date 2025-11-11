@@ -7,6 +7,7 @@ const output = document.querySelector('.output');
 const commands = [
 	{ cmd: 'print', para: 1, func: promptPrint },
 	{ cmd: 'goto', para: 1, func: promptGoto },
+	{ cmd: 'input', para: 1, func: promptInpit },
 	{ cmd: 'exit', para: 0, func: promptExit },
 	{ cmd: 'clr', para: 0, func: promptClr },
 	{ cmd: 'run', para: 0, func: promptRun },
@@ -160,6 +161,17 @@ async function promptPrint(para) {
 async function promptGoto(para) {
 	const targetLine = promptStorage.findIndex(obj => obj.lineNumber === para);
 	return targetLine;
+}
+
+async function promptInput(para) {
+	// TODO: INPUT "INPUT NUMBER (can be float):"; A
+	// INPUT "INPUT NUMBER (INT):"; A%
+	// INPUT "INPUT STRING:"; A$
+	//
+	// TODO: modify PRINT to output A$ etc
+	// add , ; and + etc for combining and concatenating
+
+	return para;
 }
 
 async function promptExit() {
