@@ -42,16 +42,20 @@
 			C$: 'TEST',
 			'D%': 3.1415,
 		};
-		const command = '"HELLO " + "WORLD" A + 2 1; 40 + 2 4 * 3; C$; A, B, C';
-		const output = document.querySelector('.output');
+		const command =
+			'"HELLO " + "WORLD"; A + 2.1; 40 + 2 4 * 3; C$; A, B, D%';
+		const outputdiv = document.querySelector('.output');
 		const operators = ['+', '-', '*', '/', '%'];
 		const outputSeparators = [';', ','];
-		const varTypes = ['$', '%'];
+		const types = ['$', '%'];
+		let outputs = [];
 		let stringmode = false;
 		let nummode = false;
 		let varmode = false;
-		let outputs = [];
 		let buffer = '';
+		let output = '';
+
+		console.log(command);
 
 		// tokenize command
 		for (i = 0; i <= command.length; i++) {
@@ -92,7 +96,7 @@
 
 			// turn nummode off
 			if (!/^[0-9.]$/.test(char) && nummode) {
-				outputs.push({ value: buffer, type: 'number' });
+				outputs.push({ value: Number(buffer), type: 'number' });
 				buffer = '';
 				nummode = false;
 			}
@@ -101,7 +105,7 @@
 			if (/^[0-9.]$/.test(char) && nummode) {
 				// if decimal is already set, start new number
 				if (char === '.' && buffer.includes('.')) {
-					outputs.push({ value: buffer, type: 'number' });
+					outputs.push({ value: Number(buffer), type: 'number' });
 					buffer = char;
 					continue;
 				}
@@ -118,11 +122,8 @@
 			}
 
 			// turn varmode off
-			if (
-				(!/^[A-Za-z]$/.test(char) || varTypes.includes(char)) &&
-				varmode
-			) {
-				if (varTypes.includes(char)) {
+			if ((!/^[A-Za-z]$/.test(char) || types.includes(char)) && varmode) {
+				if (types.includes(char)) {
 					buffer += char;
 					outputs.push({ value: buffer, type: 'variable' });
 					buffer = '';
@@ -150,70 +151,69 @@
 			if (outputSeparators.includes(char)) {
 				outputs.push({ value: char, type: 'separator' });
 			}
+		}
 
-			// variables
-			/*if (/^[A-Za-z]$/.test(char)) {
-				buffer += char;
-			}*/
+		// variable substitution
+		for (let i = 0; i < outputs.length; i++) {
+			const o = outputs[i];
+			if (o.type === 'variable') {
+				outputs[i] = {
+					value: variables[o.value],
+					type: typeof variables[o.value],
+				};
+			}
+		}
 
-			/*// skip spaces in nummode
-			if (!stringmode && char === ' ') {
+		// parse tokenized command
+		let calculation = null;
+
+		for (let i = 0; i < outputs.length; i++) {
+			const o = outputs[i];
+			console.log(o);
+
+			if (o.type === 'string') {
+				output += o.value;
 				continue;
 			}
 
-			// spaces and tabs
-			if ((!stringmode && char === ';') || char === ',') {
-				buffer += ' ';
-			}*/
+			if (calculation && o.type === 'separator') {
+				// execute calculation
+				output += eval(calculation);
+				output += ' ';
+				calculation = null;
+				continue;
+			}
 
-			// variable
-			/*if (!stringmode && char >= 'A' && char <= 'Z') {
-				let varName = '';
-				let varEnd = false;
-				let lastChar = '';
+			if (o.type === 'separator') {
+				output += ' ';
+			}
 
-				// lookahead for full variable name
-				while (/^[A-Za-z $%]$/.test(command[i])) {
-					// skip spaces
-					if (command[i] === ' ') {
-						i++;
-						continue;
-					}
-
-					varName += command[i];
-					lastChar = command[i];
-					i++;
+			if (o.type === 'number') {
+				if (calculation) {
+					calculation += o.value;
+					continue;
 				}
-
-				// get variable value
-				const typeSuffix = varTypes.includes(lastChar) ? lastChar : '';
-				const varValue = variables[varName];
-
-				// type [string]
-				if (typeSuffix === '$') {
-					console.log('string');
+				if (outputs[i + 1] && outputs[i + 1].type === 'operator') {
+					calculation = o.value;
+					continue;
 				}
+				output += o.value;
+				continue;
+			}
 
-				// type [int]
-				if (typeSuffix === '') {
-					console.log('int');
+			if (o.type === 'operator') {
+				if (calculation) {
+					calculation += o.value;
+					continue;
 				}
+			}
 
-				// type [float]
-				if (typeSuffix === '%') {
-					console.log('float');
-				}
-
-				buffer += varValue;
-
-				buffer = outputSeparators.includes(lastChar)
-					? buffer + ' '
-					: buffer;
-			}*/
+			if (calculation) {
+				console.log(calculation);
+			}
+			//output += o.value;
 		}
 
-		console.log(outputs);
-
-		output.innerHTML = buffer;
+		outputdiv.innerHTML = output;
 	</script>
 </html>
