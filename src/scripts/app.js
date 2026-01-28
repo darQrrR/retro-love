@@ -1,18 +1,32 @@
 /** C=64 Basic V2 Interpreter **/
 
 'use strict';
-
 const input = document.querySelector('.input');
 const output = document.querySelector('.output');
 const commands = [
-	{ cmd: 'print', para: 1, func: promptPrint },
-	{ cmd: 'goto', para: 1, func: promptGoto },
-	{ cmd: 'input', para: 1, func: promptInpit },
-	{ cmd: 'exit', para: 0, func: promptExit },
-	{ cmd: 'clr', para: 0, func: promptClr },
-	{ cmd: 'run', para: 0, func: promptRun },
+	{ cmd: 'print', para: 1, func: promptPrint }, // print string
+	{ cmd: 'goto', para: 1, func: promptGoto }, // jump to line
+	{ cmd: 'input', para: 1, func: promptInput }, // input string
+	{ cmd: 'exit', para: 0, func: promptExit }, // exit program
+	{ cmd: 'clr', para: 0, func: promptClr }, // clear screen
+	{ cmd: 'run', para: 0, func: promptRun }, // run stored prompts
 ];
 let promptStorage = [];
+
+// test data
+const variables = {
+	A: 123,
+	AB: 9,
+	B: 2,
+	C: 3,
+	C$: 'TEST',
+	'D%': 3.1415,
+};
+
+// TODO: IMPLEMENT TOKENIZER
+const testData = [
+	'10 print "HELLO " + "WORLD"; A + 2.1; 40 + 2 4 * 3; C$; A, B, D%',
+];
 
 // init output
 output.textContent = 'Ready.\n';
@@ -36,38 +50,40 @@ input.addEventListener('keydown', e => {
 		input.value = '';
 		input.style.width = '0px';
 		output.textContent += `${inputValue}\n`;
-
-		// save prompt if line number was given
-		const match = inputValue.match(/^\d+\s/);
-		const hasLineNumber = match?.[0] ? true : false;
-		const lineNumber = hasLineNumber ? match[0].trim() : null;
-		const prompt = hasLineNumber
-			? inputValue.slice(lineNumber.length + 1)
-			: inputValue;
-		const validatedPrompt = validatePrompt(prompt);
-		const isValidPrompt = validatedPrompt.valid;
-
-		if (!isValidPrompt) {
-			output.textContent += `\n?Syntax Error\n`;
-			resetInput(true);
-			return;
-		}
-
-		// store prompt if line number was given
-		if (hasLineNumber) {
-			const { fn, para } = validatedPrompt;
-			storePrompt({ lineNumber, fn, para });
-			resetInput(false);
-		}
-
-		// execute prompt if no linenumber was given
-		if (!hasLineNumber) {
-			validatedPrompt.fn(validatedPrompt.para).then(() => {
-				resetInput(true);
-			});
-		}
+		enterPrompt(inputValue);
 	}
 });
+
+// enter prompt
+const enterPrompt = input => {
+	// save prompt if line number was given
+	const match = input.match(/^\d+\s/);
+	const hasLineNumber = match?.[0] ? true : false;
+	const lineNumber = hasLineNumber ? match[0].trim() : null;
+	const prompt = hasLineNumber ? input.slice(lineNumber.length + 1) : input;
+	const validatedPrompt = validatePrompt(prompt);
+	const isValidPrompt = validatedPrompt.valid;
+
+	if (!isValidPrompt) {
+		output.textContent += `\n?Syntax Error\n`;
+		resetInput(true);
+		return;
+	}
+
+	// store prompt if line number was given
+	if (hasLineNumber) {
+		const { fn, para } = validatedPrompt;
+		storePrompt({ lineNumber, fn, para });
+		resetInput(false);
+	}
+
+	// execute prompt if no linenumber was given
+	if (!hasLineNumber) {
+		validatedPrompt.fn(validatedPrompt.para).then(() => {
+			resetInput(true);
+		});
+	}
+};
 
 // validate prompt
 const validatePrompt = prompt => {
@@ -103,7 +119,7 @@ const validatePrompt = prompt => {
 const storePrompt = prompt => {
 	// if linenumer already exists -> remove
 	const exists = promptStorage.findIndex(
-		obj => obj.lineNumber === prompt.lineNumber
+		obj => obj.lineNumber === prompt.lineNumber,
 	);
 	if (exists !== -1) promptStorage.splice(exists, 1);
 
@@ -137,7 +153,7 @@ async function promptRun() {
 	const numPrompts = promptStorage.length;
 
 	for (let i = 0; i < numPrompts; i++) {
-		const answer = promptStorage[i].fn(promptStorage[i].para);
+		const answer = await promptStorage[i].fn(promptStorage[i].para);
 
 		// execute GOTO
 		if (Number.isFinite(answer)) {
@@ -184,4 +200,11 @@ async function promptClr() {
 	input.value = '';
 	input.style.width = '0px';
 	return;
+}
+
+/* TEST DATA */
+if (typeof testData !== 'undefined' && testData.length) {
+	for (let i = 0; i < testData.length; i++) {
+		enterPrompt(testData[i]);
+	}
 }
