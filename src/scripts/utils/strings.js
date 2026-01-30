@@ -1,4 +1,13 @@
-export function tokenize(string, variables) {
+/**
+ * Parses String char by char and tokenizes it into an array of objects.
+ * Each object contains a value and a type.
+ * Types can be: 'string', 'number', 'variable', 'operator', 'separator'.
+ *
+ * @param {string} string - The string to be evaluated and tokenized.
+ * @param {object} variables - An object containing variables to be substituted in the string.
+ * @return {Array} An array of objects representing the tokenized string, with each object containing a value and a type.
+ */
+export function evalString(string, variables) {
 	const operators = ['+', '-', '*', '/', '%'];
 	const outputSeparators = [';', ','];
 	const types = ['$', '%'];
@@ -9,7 +18,6 @@ export function tokenize(string, variables) {
 	let buffer = '';
 	let output = '';
 
-	// tokenize string
 	for (let i = 0; i <= string.length; i++) {
 		const char = string[i];
 
@@ -27,13 +35,13 @@ export function tokenize(string, variables) {
 			continue;
 		}
 
-		// run stringmode
+		// add char to string-buffer
 		if (stringmode) {
 			buffer += char;
 			continue;
 		}
 
-		// ignore spaces if not in stringmode
+		// remove spaces if not in stringmode
 		if (!stringmode && char === ' ') {
 			continue;
 		}
@@ -52,7 +60,7 @@ export function tokenize(string, variables) {
 			nummode = false;
 		}
 
-		// run nummode
+		// add number to number-buffer
 		if (/^[0-9.]$/.test(char) && nummode) {
 			// if decimal is already set, start new number
 			if (char === '.' && buffer.includes('.')) {
@@ -87,7 +95,7 @@ export function tokenize(string, variables) {
 			varmode = false;
 		}
 
-		// run varmode
+		// add char to variable-buffer
 		if (/^[A-Za-z]$/.test(char) && varmode) {
 			buffer += char;
 			continue;
@@ -120,7 +128,7 @@ export function tokenize(string, variables) {
 
 	for (let i = 0; i < outputs.length; i++) {
 		const o = outputs[i];
-		console.log(o);
+		//console.log(o);
 
 		if (o.type === 'string') {
 			output += o.value;
@@ -160,9 +168,8 @@ export function tokenize(string, variables) {
 		}
 
 		if (calculation) {
-			console.log(calculation);
+			//console.log(calculation);
 		}
-		//output += o.value;
 	}
 
 	return output;

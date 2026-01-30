@@ -1,6 +1,9 @@
 /** C=64 Basic V2 Interpreter **/
 
 'use strict';
+
+import { evalString } from '../scripts/utils/strings.js';
+
 const input = document.querySelector('.input');
 const output = document.querySelector('.output');
 const commands = [
@@ -11,21 +14,30 @@ const commands = [
 	{ cmd: 'clr', para: 0, func: promptClr }, // clear screen
 	{ cmd: 'run', para: 0, func: promptRun }, // run stored prompts
 ];
+const commandReturns = {
+	// TODO: switch to TS enum
+	DEFAULT: 'DEFAULT',
+	GOTO: 'GOTO',
+	STOP: 'STOP',
+};
 let promptStorage = [];
+let variableStorage = [];
 
 // test data
-const variables = {
+const testVariables = {
 	A: 123,
 	AB: 9,
 	B: 2,
 	C: 3,
-	C$: 'TEST',
+	C$: 'STRING',
 	'D%': 3.1415,
 };
 
-// TODO: IMPLEMENT TOKENIZER
-const testData = [
-	'10 print "HELLO " + "WORLD"; A + 2.1; 40 + 2 4 * 3; C$; A, B, D%',
+const testPrompts = [
+	//'10 print "HELLO " + "WORLD"; A + 2.1; 40 + 2 4 * 3; C$; A, B, D%',
+	'10 print "hello"',
+	'20 print "world"',
+	'30 goto 10',
 ];
 
 // init output
@@ -126,7 +138,13 @@ const storePrompt = prompt => {
 	// push and sort new prompt
 	promptStorage.push(prompt);
 	promptStorage.sort((a, b) => a.lineNumber - b.lineNumber);
-	console.log(promptStorage);
+	//console.log(promptStorage);
+};
+
+// store variable
+const storeVariable = (name, value) => {
+	variableStorage[name] = value;
+	//console.log(variableStorage);
 };
 
 // clear input and add output line
@@ -154,40 +172,50 @@ async function promptRun() {
 
 	for (let i = 0; i < numPrompts; i++) {
 		const answer = await promptStorage[i].fn(promptStorage[i].para);
+		let sleepTime = 100;
+
+		console.log(answer);
 
 		// execute GOTO
-		if (Number.isFinite(answer)) {
-			i = answer - 1;
+		if (answer.type === commandReturns.GOTO) {
+			i = answer.value - 1;
+			sleepTime = 0;
 		}
 
 		// add delay
-		if (i < numPrompts - 1) await sleep(100);
+		if (i < numPrompts - 1) await sleep(sleepTime);
 	}
-	return;
+
+	return { type: commandReturns.DEFAULT, value: null };
 }
 
 async function promptPrint(para) {
 	if (para) {
-		output.textContent += `${para}\n`;
+		output.textContent += `${evalString(para, variableStorage)}\n`;
 		output.style.height = `${output.scrollHeight - 24}px`;
 		output.scrollTop = output.scrollHeight - output.offsetHeight - 24;
 	}
+
+	return { type: commandReturns.DEFAULT, value: null };
 }
 
 async function promptGoto(para) {
 	const targetLine = promptStorage.findIndex(obj => obj.lineNumber === para);
-	return targetLine;
+
+	return { type: commandReturns.GOTO, value: targetLine };
 }
 
 async function promptInput(para) {
-	// TODO: INPUT "INPUT NUMBER (can be float):"; A
+	// INPUT "INPUT NUMBER (can be float):"; A
 	// INPUT "INPUT NUMBER (INT):"; A%
-	// INPUT "INPUT STRING:"; A$
-	//
-	// TODO: modify PRINT to output A$ etc
-	// add , ; and + etc for combining and concatenating
+	// INPUT "INPUT STRING:"; A$		-> INPUT STRING
+	// INPUT A1%, B, XY$ 				-> ? -> ? -> ?
 
-	return para;
+	if (para) {
+		console.log(para);
+	}
+
+	return { type: commandReturns.STOP, value: para };
 }
 
 async function promptExit() {
@@ -199,12 +227,19 @@ async function promptClr() {
 	output.style.height = '0px';
 	input.value = '';
 	input.style.width = '0px';
-	return;
+
+	return { type: commandReturns.DEFAULT, value: null };
 }
 
 /* TEST DATA */
-if (typeof testData !== 'undefined' && testData.length) {
-	for (let i = 0; i < testData.length; i++) {
-		enterPrompt(testData[i]);
+if (typeof testPrompts !== 'undefined' && testPrompts.length) {
+	for (let i = 0; i < testPrompts.length; i++) {
+		enterPrompt(testPrompts[i]);
+	}
+}
+
+if (typeof testVariables !== 'undefined' && Object.keys(testVariables).length) {
+	for (let index in testVariables) {
+		storeVariable(index, testVariables[index]);
 	}
 }
