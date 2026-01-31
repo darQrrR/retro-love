@@ -15,13 +15,15 @@ const commands = [
 	{ cmd: 'run', para: 0, func: promptRun }, // run stored prompts
 ];
 const commandReturns = {
-	// TODO: switch to TS enum
+	// TODO: switch to TS for real enum?
 	DEFAULT: 'DEFAULT',
 	GOTO: 'GOTO',
 	STOP: 'STOP',
 };
 let promptStorage = [];
 let variableStorage = [];
+let scriptRunning = false;
+let scriptAbort = false;
 
 // test data
 const testVariables = {
@@ -38,6 +40,8 @@ const testPrompts = [
 	'10 print "hello"',
 	'20 print "world"',
 	'30 goto 10',
+	//'30 input A',
+	//'40 print "yabaited"',
 ];
 
 // init output
@@ -57,6 +61,7 @@ input.addEventListener('blur', () => {
 
 // handle input
 input.addEventListener('keydown', e => {
+	// TODO: remove syntax error on empty enter
 	if (e.key === 'Enter') {
 		const inputValue = input.value.toLowerCase().trim();
 		input.value = '';
@@ -65,6 +70,32 @@ input.addEventListener('keydown', e => {
 		enterPrompt(inputValue);
 	}
 });
+
+// handle pressed keys
+const keysDown = [];
+input.addEventListener('keydown', e => {
+	if (keysDown.indexOf(e.key) === -1) {
+		keysDown.push(e.key);
+	}
+
+	if (
+		keysDown.length > 1 &&
+		keysDown.includes('c') &&
+		keysDown.includes('Control')
+	) {
+		scriptAbort = true;
+	}
+});
+
+input.addEventListener('keyup', e => {
+	const index = keysDown.indexOf(e.key);
+
+	if (index !== -1) {
+		keysDown.splice(index, 1);
+	}
+});
+
+// abort run
 
 // enter prompt
 const enterPrompt = input => {
@@ -169,6 +200,7 @@ async function promptRun() {
 	if (!promptStorage.length) return;
 
 	const numPrompts = promptStorage.length;
+	scriptRunning = true;
 
 	for (let i = 0; i < numPrompts; i++) {
 		const answer = await promptStorage[i].fn(promptStorage[i].para);
@@ -176,16 +208,31 @@ async function promptRun() {
 
 		console.log(answer);
 
+		// check if abort was pressed
+		if (scriptAbort) {
+			scriptAbort = false;
+			scriptRunning = false;
+			return { type: commandReturns.DEFAULT, value: null };
+		}
+
 		// execute GOTO
 		if (answer.type === commandReturns.GOTO) {
 			i = answer.value - 1;
 			sleepTime = 0;
 		}
 
+		if (answer.type === commandReturns.STOP) {
+			const zippy = await waitForUserInput(input);
+			console.log('zippy: ' + zippy);
+
+			return { type: commandReturns.STOP, value: answer.value };
+		}
+
 		// add delay
 		if (i < numPrompts - 1) await sleep(sleepTime);
 	}
 
+	scriptRunning = false;
 	return { type: commandReturns.DEFAULT, value: null };
 }
 
@@ -216,6 +263,18 @@ async function promptInput(para) {
 	}
 
 	return { type: commandReturns.STOP, value: para };
+}
+
+function waitForUserInput() {
+	return new Promise(resolve => {
+		const handler = e => {
+			if (e.key === '0') {
+				input.removeEventListener('keydown', handler);
+				resolve(input.value);
+			}
+		};
+		input.addEventListener('keydown', handler);
+	});
 }
 
 async function promptExit() {
