@@ -10,13 +10,13 @@ as the starting point for compiling all project-related scss-files
 */
 
 // generic styles
-@import 'shared/html';
-@import 'shared/animations';
-@import 'shared/typography';
+@use 'shared/html';
+@use 'shared/animations';
+@use 'shared/typography';
 
 // portfolio sections
-@import 'section/section-c64';
-@import 'section/section-backend';
+@use 'section/section-c64';
+@use 'section/section-backend';
 
 // sprites
-@import 'sprite/sprite-me';
+@use 'sprite/sprite-me';
