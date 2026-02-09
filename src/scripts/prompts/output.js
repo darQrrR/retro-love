@@ -1,22 +1,25 @@
-import { evalString } from '../../scripts/utils/strings.js';
-import { commandReturns } from '../app/state.js';
+import { promptTypes } from '../app/constants.js';
 import * as storage from '../app/storage.js';
+import * as strings from '../../scripts/utils/strings.js';
+import { dom } from '../ui/dom.js';
 
-export async function promptPrint(para) {
+export async function PRINT(para) {
 	if (para) {
-		outputLine(evalString(para, storage.variableStorage));
-		//output.textContent += `\n${evalString(para, storage.variableStorage)}`;
-		//output.style.height = `${output.scrollHeight - 24}px`;
-		//output.scrollTop = output.scrollHeight - output.offsetHeight - 24;
+		const tokenized = strings.tokenize(para);
+		const substituted = strings.substituteVariables(
+			tokenized,
+			storage.variableStorage,
+		);
+		const parsed = strings.parse(substituted);
+		dom.outputLine(parsed);
 	}
 
-	return { type: commandReturns.DEFAULT, value: null };
+	return { type: promptTypes.DEFAULT, value: null };
 }
 
-// debug log
-export const c64log = message => {
-	//outputField.textContent += `\n${message}`;
-	outputLine(message);
-	//outputField.style.height = `${outputField.scrollHeight - 24}px`;
-	//outputField.scrollTop = outputField.scrollHeight - outputField.offsetHeight - 24;
-};
+export async function LIST() {
+	// TODO: list prompts of range, e.g. LIST 30,80
+	storage.promptStorage.forEach(prompt => {
+		dom.outputLine(`${prompt.lineNumber} ${prompt.fn.name} ${prompt.para}`);
+	});
+}

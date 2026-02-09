@@ -1,5 +1,9 @@
+import { dom } from '../ui/dom.js';
+import { commands } from '../prompts/index.js';
+import * as storage from '../app/storage.js';
+
 // dispatch prompt
-export function createDispatcher({ actions, commands }) {
+function createDispatcher() {
 	function dispatchPrompt(inputPrompt) {
 		// save prompt if line number was given
 		const match = inputPrompt.match(/^\d+\s/);
@@ -12,8 +16,8 @@ export function createDispatcher({ actions, commands }) {
 		const isValidPrompt = validatedPrompt.valid;
 
 		if (!isValidPrompt) {
-			actions.outputLine(`?Syntax Error`);
-			actions.resetInput(true);
+			dom.outputLine(`?Syntax Error`);
+			dom.resetInput(true);
 			return;
 		}
 
@@ -21,13 +25,13 @@ export function createDispatcher({ actions, commands }) {
 		if (hasLineNumber) {
 			const { fn, para } = validatedPrompt;
 			storage.storePrompt({ lineNumber, fn, para });
-			actions.resetInput(false);
+			dom.resetInput(false);
 		}
 
 		// execute prompt if no linenumber was given
 		if (!hasLineNumber) {
 			validatedPrompt.fn(validatedPrompt.para).then(() => {
-				actions.resetInput(true);
+				dom.resetInput(true);
 			});
 		}
 	}
@@ -50,6 +54,9 @@ export function createDispatcher({ actions, commands }) {
 
 		if (!result) return false;
 
+		//console.log(result.para);
+		//console.log(parameter);
+
 		const isValid = !!(
 			(result.para && parameter) ||
 			(!result.para && !parameter)
@@ -64,3 +71,5 @@ export function createDispatcher({ actions, commands }) {
 
 	return { dispatchPrompt };
 }
+
+export const dispatcher = createDispatcher();

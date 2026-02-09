@@ -7,16 +7,16 @@
  * @param {object} variables - An object containing variables to be substituted in the string.
  * @return {Array} An array of objects representing the tokenized string, with each object containing a value and a type.
  */
-export function evalString(string, variables) {
+
+export function tokenize(string) {
 	const operators = ['+', '-', '*', '/', '%'];
 	const outputSeparators = [';', ','];
 	const types = ['$', '%'];
 	let outputs = [];
+	let buffer = '';
 	let stringmode = false;
 	let nummode = false;
 	let varmode = false;
-	let buffer = '';
-	let output = '';
 
 	for (let i = 0; i <= string.length; i++) {
 		const char = string[i];
@@ -112,18 +112,25 @@ export function evalString(string, variables) {
 		}
 	}
 
-	// variable substitution
-	for (let i = 0; i < outputs.length; i++) {
-		const o = outputs[i];
+	return outputs;
+}
+
+export function substituteVariables(tokenizedString, variables) {
+	for (let i = 0; i < tokenizedString.length; i++) {
+		const o = tokenizedString[i];
 		if (o.type === 'variable') {
-			outputs[i] = {
+			tokenizedString[i] = {
 				value: variables[o.value],
 				type: typeof variables[o.value],
 			};
 		}
 	}
 
-	// parse tokenized string
+	return tokenizedString;
+}
+
+export function parse(outputs) {
+	let output = '';
 	let calculation = null;
 
 	for (let i = 0; i < outputs.length; i++) {
@@ -165,10 +172,6 @@ export function evalString(string, variables) {
 				calculation += o.value;
 				continue;
 			}
-		}
-
-		if (calculation) {
-			//console.log(calculation);
 		}
 	}
 

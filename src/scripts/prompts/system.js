@@ -1,17 +1,18 @@
-export async function promptList(start = 0, end = 0) {
-	promptStorage.forEach(prompt => {
-		console.log(prompt);
-	});
+import { promptTypes } from '../app/constants.js';
+import { dom } from '../ui/dom.js';
+
+export async function CLR() {
+	dom.clearOutput();
+	dom.clearInput();
+
+	return { type: promptTypes.DEFAULT, value: null };
 }
 
-export async function promptClr() {
-	output.textContent = ``;
-	output.style.height = '0px';
-	clearInput();
-
-	return { type: commandReturns.DEFAULT, value: null };
-}
-
-export async function promptExit() {
+export async function EXIT() {
 	return;
 }
+
+// debug log
+export const C64LOG = message => {
+	dom.outputLine(message);
+};

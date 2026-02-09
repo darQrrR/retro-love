@@ -1,36 +1,59 @@
-import { commandReturns } from '../app/state.js';
+import { promptTypes } from '../app/constants.js';
 import { storeVariable } from '../app/storage.js';
+import * as strings from '../../scripts/utils/strings.js';
+import { dom } from '../ui/dom.js';
 
-export async function promptInput(para) {
+export async function INPUT(para) {
 	// INPUT "INPUT NUMBER (can be float):"; A
 	// INPUT "INPUT NUMBER (INT):"; A%
 	// INPUT "INPUT STRING:"; A$		-> INPUT STRING
 	// INPUT A1%, B, XY$ 				-> ? -> ? -> ?
 
-	if (para.startsWith('"')) {
-		const question = para.match(/"([^"]*)"/)?.[1];
-		//output.textContent += `question\n`;
-		//output.style.height = `${output.scrollHeight - 24}px`;
-		//output.scrollTop = output.scrollHeight - output.offsetHeight - 24;
-		//console.log(question);
+	const tokens = strings.tokenize(para);
+
+	// check if input starts with question
+	if (
+		tokens[0].type === 'string' &&
+		tokens[1].value === ';' &&
+		tokens[2].type === 'variable'
+	) {
+		dom.outputLine(tokens[0].value);
 	}
 
-	return { type: commandReturns.INPUT, value: para };
+	// extract variables
+	const vars = tokens.slice(2);
+
+	const separatorsValid = vars.every((value, index) =>
+		index % 2 === 1 ? value.value === ',' : true,
+	);
+
+	const variablesValid = vars.every((value, index) =>
+		index % 2 === 0 ? value.type === 'variable' : true,
+	);
+	// TODO: check if last element is variable, not seperator
+	// invalild input
+	if (!separatorsValid || !variablesValid) {
+		return { type: promptTypes.DEFAULT, value: null };
+	}
+
+	const requestedVariables = vars.filter((_, i) => i % 2 === 0);
+	return { type: promptTypes.INPUT, value: requestedVariables };
 }
 
 export async function waitForUserInput(variableName) {
 	return new Promise(resolve => {
 		const handler = e => {
 			if (e.key === 'Enter') {
-				const inputValue = input.value.trim();
+				const inputValue = dom.input.value.trim();
 				storeVariable(variableName, inputValue);
-				//output.textContent += `\n${inputValue}`;
-				outputLine(inputValue);
-				input.removeEventListener('keydown', handler);
+
+				dom.outputLine(inputValue);
+				dom.clearInput();
+				dom.input.removeEventListener('keydown', handler);
 				resolve(inputValue);
 			}
 		};
 		// add temporary event listener
-		input.addEventListener('keydown', handler);
+		dom.input.addEventListener('keydown', handler);
 	});
 }

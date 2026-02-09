@@ -1,17 +1,6 @@
-export const commandReturns = Object.freeze({
-	// TODO: switch to TS for real enum?
-	DEFAULT: 'DEFAULT',
-	GOTO: 'GOTO',
-	INPUT: 'INPUT',
-});
+import { inputModes } from './constants';
 
-export const inputModes = Object.freeze({
-	// TODO: switch to TS for real enum?
-	PROMPT: 'PROMPT',
-	INPUTVAR: 'INPUTVAR',
-});
-
-export const runtime = {
+export const programState = {
 	activeInputMode: inputModes.PROMPT,
 	inputEnabled: true,
 	scriptRunning: false,
