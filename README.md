@@ -1,8 +1,6 @@
-# Retro Love — C=64 BASIC V2 (browser)
+# C=64 BASIC V2 Interpreter
 
-A tiny, nostalgic BASIC-like prompt that mimics a Commodore 64 feel and flow in your browser. Type commands, store line-numbered “programs”, run them, prompt for input, and print output — complete with a retro font and a blinking block cursor.
-
-This project uses Vite, vanilla JavaScript modules, and SCSS. It’s easy to extend with new commands.
+A tiny, nostalgic BASIC-like prompt that mimics a Commodore 64 feel and flow in your browser. Type commands, store line-numbered “programs”, run them, prompt for input, and print output - complete with a retro font and a blinking block cursor 👾
 
 
 ## Quick start
