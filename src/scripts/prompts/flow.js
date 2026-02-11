@@ -8,64 +8,72 @@ import { waitForUserInput } from './input.js';
 const sleep = ms => new Promise(res => setTimeout(res, ms));
 
 export async function RUN() {
-	if (!storage.promptStorage.length) return;
+  if (!storage.promptStorage.length) return;
 
-	const numPrompts = storage.promptStorage.length;
-	programState.scriptRunning = true;
-	programState.inputEnabled = false;
+  const numPrompts = storage.promptStorage.length;
+  programState.scriptRunning = true;
+  programState.inputEnabled = false;
 
-	for (let i = 0; i < numPrompts; i++) {
-		const answer = await storage.promptStorage[i].fn(
-			storage.promptStorage[i].para,
-		);
-		let sleepTime = 100;
+  for (let i = 0; i < numPrompts; i++) {
+    const answer = await storage.promptStorage[i].fn(
+      storage.promptStorage[i].para,
+    );
+    let sleepTime = 100;
 
-		dom.clearInput();
+    dom.clearInput();
 
-		// check if abort was pressed
-		if (programState.scriptAbort) {
-			programState.scriptAbort = false;
-			programState.scriptRunning = false;
-			programState.inputEnabled = true;
-			return { type: promptTypes.DEFAULT, value: null };
-		}
+    // check if abort was pressed
+    if (programState.scriptAbort) {
+      programState.scriptAbort = false;
+      programState.scriptRunning = false;
+      programState.inputEnabled = true;
+      return;
+    }
 
-		// execute GOTO
-		if (answer.type === promptTypes.GOTO) {
-			i = answer.value - 1;
-			sleepTime = 0;
-		}
+    // check if error was thrown
+    if (answer.type === promptTypes.ERROR) {
+      programState.scriptRunning = false;
+      programState.inputEnabled = true;
+      dom.outputLine('?Syntax Error');
+      return;
+    }
 
-		// execute INPUT
-		if (answer.type === promptTypes.INPUT) {
-			programState.activeInputMode = inputModes.INPUTVAR;
-			programState.inputEnabled = true;
+    // execute GOTO
+    if (answer.type === promptTypes.GOTO) {
+      i = answer.value - 1;
+      sleepTime = 0;
+    }
 
-			for (let j = 0; j < answer.value.length; j++) {
-				await waitForUserInput(answer.value[j].value);
-			}
+    // execute INPUT
+    if (answer.type === promptTypes.INPUT) {
+      programState.activeInputMode = inputModes.INPUTVAR;
+      programState.inputEnabled = true;
 
-			programState.activeInputMode = inputModes.PROMPT;
-			programState.inputEnabled = false;
-		}
+      for (let j = 0; j < answer.value.length; j++) {
+        await waitForUserInput(answer.value[j].value);
+      }
 
-		// add delay
-		if (i < numPrompts - 1) await sleep(sleepTime);
-	}
+      programState.activeInputMode = inputModes.PROMPT;
+      programState.inputEnabled = false;
+    }
 
-	programState.scriptRunning = false;
-	programState.inputEnabled = true;
-	return { type: promptTypes.DEFAULT, value: null };
+    // add delay
+    if (i < numPrompts - 1) await sleep(sleepTime);
+  }
+
+  programState.scriptRunning = false;
+  programState.inputEnabled = true;
+  return;
 }
 
 export async function GOTO(para) {
-	const targetLine = storage.promptStorage.findIndex(
-		obj => obj.lineNumber === para,
-	);
+  const targetLine = storage.promptStorage.findIndex(
+    obj => obj.lineNumber === para,
+  );
 
-	return { type: promptTypes.GOTO, value: targetLine };
+  return { type: promptTypes.GOTO, value: targetLine };
 }
 
 export async function IF(para) {
-	return { type: promptTypes.DEFAULT, value: null };
+  return { type: promptTypes.DEFAULT, value: null };
 }
