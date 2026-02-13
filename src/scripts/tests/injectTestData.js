@@ -16,8 +16,8 @@ export function injectTestData() {
     //'20 print "--------"',
     //'30 goto 10',
 
-    '10 input "What is your name?"; N$',
-    '20 print "Hello"; N$; ". Welcome to Basic V2!"',
+    '10 input "What is your name?"; A, B$',
+    '20 print "Hello"; A; B$; ". Welcome to Basic V2!"',
     '30 rem This is a comment',
     '40 print "--------"',
     '50 goto 10',

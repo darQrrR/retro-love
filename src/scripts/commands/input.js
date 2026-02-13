@@ -4,14 +4,9 @@ import * as strings from '../../scripts/utils/strings.js';
 import { dom } from '../ui/dom.js';
 
 export async function INPUT(args) {
-  // INPUT "INPUT NUMBER (can be float):"; A
-  // INPUT "INPUT NUMBER (INT):"; A%
-  // INPUT "INPUT STRING:"; A$		-> INPUT STRING
-  // INPUT A1%, B, XY$ 				-> ? -> ? -> ?
-
   const tokens = strings.tokenize(args);
 
-  // check if input starts with question
+  // check if input starts with prompt request
   if (tokens[0].type === 'string' && tokens[1].value === ';' && tokens[2].type === 'variable') {
     dom.outputLine(tokens[0].value);
   }
@@ -26,7 +21,11 @@ export async function INPUT(args) {
   const variablesValid = vars.every((value, index) =>
     index % 2 === 0 ? value.type === 'variable' : true,
   );
-  // TODO: check if last element is variable, not seperator
+
+  if (lastElement.type !== 'variable') {
+    return { type: commandTypes.ERROR, value: null };
+  }
+
   // invalild input
   if (!separatorsValid || !variablesValid || lastElement.type !== 'variable') {
     return { type: commandTypes.ERROR, value: null };
@@ -42,12 +41,10 @@ export async function waitForUserInput(variableName) {
     const handler = (e) => {
       if (e.key === 'Enter') {
         const inputValue = dom.input.value.trim();
-
-        const expectedType = strings.determineVariableType(variableName);
-        const actualType = strings.assignVariableType(inputValue);
+        const { compatible, value } = strings.isTypeCompatible(variableName, inputValue);
 
         // reject if type is invalid
-        if (expectedType !== actualType) {
+        if (!compatible) {
           dom.input.removeEventListener('keydown', handler);
           dom.outputLine(inputValue);
           dom.outputLine(`?REDO FROM START`);
@@ -57,7 +54,7 @@ export async function waitForUserInput(variableName) {
         }
 
         // store if valid
-        storeVariable(variableName, inputValue);
+        storeVariable(variableName, value);
         dom.outputLine(inputValue);
         dom.clearInput();
         dom.input.removeEventListener('keydown', handler);

@@ -8,6 +8,7 @@
  * @return {Array} An array of objects representing the tokenized string, with each object containing a value and a type.
  */
 
+// create array of tokens
 export function tokenize(string) {
   const operators = ['+', '-', '*', '/', '%'];
   const outputSeparators = [';', ','];
@@ -115,6 +116,7 @@ export function tokenize(string) {
   return outputs;
 }
 
+// replace variables with their values
 export function substituteVariables(tokenizedString, variables) {
   for (let i = 0; i < tokenizedString.length; i++) {
     const o = tokenizedString[i];
@@ -129,6 +131,7 @@ export function substituteVariables(tokenizedString, variables) {
   return tokenizedString;
 }
 
+// calculate expressions
 export function parse(outputs) {
   let output = '';
   let calculation = null;
@@ -178,16 +181,18 @@ export function parse(outputs) {
   return output;
 }
 
-export function determineVariableType(variable) {
-  if (variable.split(-1) === '$') {
+// determine variable type by variable name
+export function determineVariableType(variableName) {
+  if (variableName.slice(-1) === '$') {
     return 'string';
   }
-  if (variable.split(-1) === '%') {
+  if (variableName.slice(-1) === '%') {
     return 'integer';
   }
   return 'float';
 }
 
+// get variable type by prompt
 export function assignVariableType(prompt) {
   const trimmed = prompt.trim();
 
@@ -200,4 +205,24 @@ export function assignVariableType(prompt) {
   }
 
   return 'string';
+}
+
+// check if variable type is compatible with prompt type
+export function isTypeCompatible(variableName, prompt) {
+  const expectedType = determineVariableType(variableName);
+  const actualType = assignVariableType(prompt);
+
+  if (expectedType === 'string') {
+    return { compatible: true, value: prompt };
+  }
+
+  if (expectedType === 'integer' && actualType === 'float') {
+    return { compatible: true, value: Math.trunc(prompt) };
+  }
+
+  if ((expectedType === 'integer' || expectedType === 'float') && actualType === 'string') {
+    return { compatible: false, value: prompt };
+  }
+
+  return { compatible: true, value: prompt };
 }
