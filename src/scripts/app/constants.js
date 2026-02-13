@@ -1,4 +1,4 @@
-export const promptTypes = Object.freeze({
+export const commandTypes = Object.freeze({
   // TODO: switch to TS for real enum?
   DEFAULT: 'DEFAULT',
   GOTO: 'GOTO',

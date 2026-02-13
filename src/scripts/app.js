@@ -6,5 +6,5 @@ import { injectTestData } from './tests/injectTestData.js';
 eventListeners.addEventListeners(dom);
 dom.outputLine(`Ready.`);
 
-// TODO: only run in dev -> if (import.meta.env.DEV) injectTestData(dispatchPrompt, storage.storeVariable);
+// TODO: only run in dev -> if (import.meta.env.DEV) injectTestData(dispatchCommand, storage.storeVariable);
 injectTestData();

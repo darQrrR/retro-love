@@ -1,26 +1,22 @@
-export let promptStorage = [];
+export let commandStorage = [];
 export let variableStorage = [];
 
-// store prompt
-export const storePrompt = (prompt) => {
+export const storeCommand = (command) => {
   // if linenumer already exists -> remove
-  const exists = promptStorage.findIndex(
-    (obj) => obj.lineNumber === prompt.lineNumber,
-  );
-  if (exists !== -1) promptStorage.splice(exists, 1);
+  const exists = commandStorage.findIndex((obj) => obj.lineNumber === command.lineNumber);
+  if (exists !== -1) commandStorage.splice(exists, 1);
 
-  // push and sort new prompt
-  promptStorage.push(prompt);
-  promptStorage.sort((a, b) => a.lineNumber - b.lineNumber);
+  // push and sort new command
+  commandStorage.push(command);
+  commandStorage.sort((a, b) => a.lineNumber - b.lineNumber);
 };
 
-// store variable
 export const storeVariable = (name, value) => {
   variableStorage[name] = value;
 };
 
-export const clearPromptStorage = () => {
-  promptStorage = [];
+export const clearCommandStorage = () => {
+  commandStorage = [];
 };
 
 export const clearVariableStorage = () => {
@@ -28,6 +24,6 @@ export const clearVariableStorage = () => {
 };
 
 export const clearAllStorage = () => {
-  promptStorage = [];
+  commandStorage = [];
   variableStorage = [];
 };
