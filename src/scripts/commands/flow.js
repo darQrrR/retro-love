@@ -45,7 +45,11 @@ export async function RUN() {
       programState.isInputEnabled = true;
 
       for (let j = 0; j < answer.value.length; j++) {
-        await waitForUserInput(answer.value[j].value);
+        await waitForUserInput(answer.value[j].value)
+          .then((value) => {})
+          .catch((err) => {
+            j--;
+          });
       }
 
       programState.activeInputMode = inputModes.PROMPT;

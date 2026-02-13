@@ -38,12 +38,26 @@ export async function INPUT(args) {
 
 // TODO: ability to cancel input with CTRL+C
 export async function waitForUserInput(variableName) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const handler = (e) => {
       if (e.key === 'Enter') {
         const inputValue = dom.input.value.trim();
-        storeVariable(variableName, inputValue);
 
+        const expectedType = strings.determineVariableType(variableName);
+        const actualType = strings.assignVariableType(inputValue);
+
+        // reject if type is invalid
+        if (expectedType !== actualType) {
+          dom.input.removeEventListener('keydown', handler);
+          dom.outputLine(inputValue);
+          dom.outputLine(`?REDO FROM START`);
+          dom.clearInput();
+          reject(new Error('InvalidType'));
+          return;
+        }
+
+        // store if valid
+        storeVariable(variableName, inputValue);
         dom.outputLine(inputValue);
         dom.clearInput();
         dom.input.removeEventListener('keydown', handler);
