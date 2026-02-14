@@ -1,6 +1,6 @@
 import { dom } from '../ui/dom.js';
 import { commands } from '../commands/index.js';
-import * as storage from '../app/storage.js';
+import * as storage from './storage.js';
 
 function createDispatcher() {
   function dispatchCommand(prompt) {

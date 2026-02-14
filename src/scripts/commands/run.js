@@ -61,17 +61,5 @@ export async function RUN() {
   }
 
   programState.isInputEnabled = true;
-  return;
-}
-
-export async function GOTO(lineNumber) {
-  const targetLineNumber = Number(lineNumber);
-  const targetLine = storage.commandStorage.findIndex((obj) => obj.lineNumber === targetLineNumber);
-
-  if (targetLine === -1) return { type: commandTypes.ERROR, value: null };
-  return { type: commandTypes.GOTO, value: targetLine };
-}
-
-export async function IF(args) {
   return { type: commandTypes.DEFAULT, value: null };
 }

@@ -1,7 +1,7 @@
-import { programState } from "../app/state.js";
-import { inputModes } from "../app/constants.js";
+import { programState } from '../app/state.js';
+import { inputModes } from '../app/constants.js';
 
-import { dispatcher } from "../commands/dispatcher.js";
+import { dispatcher } from '../app/dispatcher.js';
 
 function createEventListeners() {
   function addEventListeners(dom) {
@@ -9,21 +9,21 @@ function createEventListeners() {
 
     // move cursor on input
     //TODO: blinking cursor movement with arrow-keys
-    input.addEventListener("input", () => {
+    input.addEventListener('input', () => {
       const inputSize = input.value.length ? input.value.length : 1;
-      input.setAttribute("size", inputSize);
-      input.style.width = input.value.length === 0 ? "0px" : "auto";
+      input.setAttribute('size', inputSize);
+      input.style.width = input.value.length === 0 ? '0px' : 'auto';
     });
 
     // force input focus
-    input.addEventListener("blur", () => {
+    input.addEventListener('blur', () => {
       input.focus();
     });
 
     // handle input
     // TODO: remove syntax error on empty enter
     const keysDown = [];
-    input.addEventListener("keydown", (e) => {
+    input.addEventListener('keydown', (e) => {
       const key = e.key;
 
       if (!programState.isInputEnabled) {
@@ -34,14 +34,14 @@ function createEventListeners() {
           keysDown.push(e.key);
         }
 
-        if (keysDown.length > 1 && keysDown.includes("c") && keysDown.includes("Control")) {
+        if (keysDown.length > 1 && keysDown.includes('c') && keysDown.includes('Control')) {
           programState.abortProgram = true;
         }
 
         return;
       }
 
-      if (key === "Enter" && programState.activeInputMode === inputModes.PROMPT) {
+      if (key === 'Enter' && programState.activeInputMode === inputModes.PROMPT) {
         const inputValue = input.value.toLowerCase().trim();
         dom.clearInput();
         dom.outputLine(inputValue);
@@ -50,7 +50,7 @@ function createEventListeners() {
       }
     });
 
-    input.addEventListener("keyup", (e) => {
+    input.addEventListener('keyup', (e) => {
       const index = keysDown.indexOf(e.key);
 
       if (index !== -1) {

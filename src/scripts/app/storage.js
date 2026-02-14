@@ -13,6 +13,7 @@ export const storeCommand = (command) => {
 
 export const storeVariable = (name, value) => {
   variableStorage[name] = value;
+  console.log(variableStorage);
 };
 
 export const clearCommandStorage = () => {

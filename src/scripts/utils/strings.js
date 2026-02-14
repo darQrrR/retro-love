@@ -13,7 +13,7 @@ export function tokenize(string) {
   const operators = ['+', '-', '*', '/', '%'];
   const outputSeparators = [';', ','];
   const types = ['$', '%'];
-  let outputs = [];
+  let tokens = [];
   let buffer = '';
   let stringmode = false;
   let nummode = false;
@@ -30,7 +30,7 @@ export function tokenize(string) {
 
     // turn stringmode off
     if (char === '"' && stringmode) {
-      outputs.push({ value: buffer, type: 'string' });
+      tokens.push({ value: buffer, type: 'string' });
       stringmode = false;
       buffer = '';
       continue;
@@ -56,7 +56,7 @@ export function tokenize(string) {
 
     // turn nummode off
     if (!/^[0-9.]$/.test(char) && nummode) {
-      outputs.push({ value: Number(buffer), type: 'number' });
+      tokens.push({ value: Number(buffer), type: 'number' });
       buffer = '';
       nummode = false;
     }
@@ -65,7 +65,7 @@ export function tokenize(string) {
     if (/^[0-9.]$/.test(char) && nummode) {
       // if decimal is already set, start new number
       if (char === '.' && buffer.includes('.')) {
-        outputs.push({ value: Number(buffer), type: 'number' });
+        tokens.push({ value: Number(buffer), type: 'number' });
         buffer = char;
         continue;
       }
@@ -85,13 +85,13 @@ export function tokenize(string) {
     if ((!/^[A-Za-z]$/.test(char) || types.includes(char)) && varmode) {
       if (types.includes(char)) {
         buffer += char;
-        outputs.push({ value: buffer, type: 'variable' });
+        tokens.push({ value: buffer, type: 'variable' });
         buffer = '';
         varmode = false;
         continue;
       }
 
-      outputs.push({ value: buffer, type: 'variable' });
+      tokens.push({ value: buffer, type: 'variable' });
       buffer = '';
       varmode = false;
     }
@@ -104,80 +104,80 @@ export function tokenize(string) {
 
     // operators
     if (operators.includes(char)) {
-      outputs.push({ value: char, type: 'operator' });
+      tokens.push({ value: char, type: 'operator' });
     }
 
     // separators
     if (outputSeparators.includes(char)) {
-      outputs.push({ value: char, type: 'separator' });
+      tokens.push({ value: char, type: 'separator' });
     }
   }
 
-  return outputs;
+  return tokens;
 }
 
 // replace variables with their values
-export function substituteVariables(tokenizedString, variables) {
-  for (let i = 0; i < tokenizedString.length; i++) {
-    const o = tokenizedString[i];
-    if (o.type === 'variable') {
-      tokenizedString[i] = {
-        value: variables[o.value],
-        type: typeof variables[o.value],
+export function substituteVariables(tokens, variables) {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    if (token.type === 'variable') {
+      tokens[i] = {
+        value: variables[token.value],
+        type: typeof variables[token.value],
       };
     }
   }
 
-  return tokenizedString;
+  return tokens;
 }
 
 // calculate expressions
-export function parse(outputs) {
+export function parse(tokens) {
   let output = '';
   let calculation = null;
 
-  for (let i = 0; i < outputs.length; i++) {
-    const o = outputs[i];
-    //console.log(o);
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
 
-    if (o.type === 'string') {
-      output += o.value;
+    if (token.type === 'string') {
+      output += token.value;
       continue;
     }
 
-    if (calculation && o.type === 'separator') {
+    if (calculation && (token.type === 'separator' || i === tokens.length - 1)) {
       // execute calculation
+      if (i === tokens.length - 1) calculation += token.value;
       output += eval(calculation);
       output += ' ';
       calculation = null;
       continue;
     }
 
-    if (o.type === 'separator') {
+    if (token.type === 'separator') {
       output += ' ';
     }
 
-    if (o.type === 'number') {
+    if (token.type === 'number') {
       if (calculation) {
-        calculation += o.value;
+        calculation += token.value;
         continue;
       }
-      if (outputs[i + 1] && outputs[i + 1].type === 'operator') {
-        calculation = o.value;
+      if (tokens[i + 1] && tokens[i + 1].type === 'operator') {
+        calculation = token.value;
         continue;
       }
-      output += o.value;
+      output += token.value;
       continue;
     }
 
-    if (o.type === 'operator') {
+    if (token.type === 'operator') {
       if (calculation) {
-        calculation += o.value;
+        calculation += token.value;
         continue;
       }
     }
   }
-
+  console.log(output);
   return output;
 }
 
@@ -213,16 +213,32 @@ export function isTypeCompatible(variableName, prompt) {
   const actualType = assignVariableType(prompt);
 
   if (expectedType === 'string') {
-    return { compatible: true, value: prompt };
+    return true;
   }
 
   if (expectedType === 'integer' && actualType === 'float') {
-    return { compatible: true, value: Math.trunc(prompt) };
+    return true;
   }
 
   if ((expectedType === 'integer' || expectedType === 'float') && actualType === 'string') {
-    return { compatible: false, value: prompt };
+    return false;
   }
 
-  return { compatible: true, value: prompt };
+  return true;
+}
+
+export function convertToType(value, type) {
+  const trimmed = value.trim();
+
+  if (type === 'string') {
+    return trimmed.toString();
+  }
+
+  if (type === 'integer') {
+    return Math.trunc(trimmed);
+  }
+
+  if (type === 'float') {
+    return parseFloat(trimmed);
+  }
 }

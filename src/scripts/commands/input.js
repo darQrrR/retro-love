@@ -41,10 +41,11 @@ export async function waitForUserInput(variableName) {
     const handler = (e) => {
       if (e.key === 'Enter') {
         const inputValue = dom.input.value.trim();
-        const { compatible, value } = strings.isTypeCompatible(variableName, inputValue);
+        const isCompatible = strings.isTypeCompatible(variableName, inputValue);
+        const expectedType = strings.determineVariableType(variableName);
 
         // reject if type is invalid
-        if (!compatible) {
+        if (!isCompatible) {
           dom.input.removeEventListener('keydown', handler);
           dom.outputLine(inputValue);
           dom.outputLine(`?REDO FROM START`);
@@ -54,6 +55,7 @@ export async function waitForUserInput(variableName) {
         }
 
         // store if valid
+        const value = strings.convertToType(inputValue, expectedType);
         storeVariable(variableName, value);
         dom.outputLine(inputValue);
         dom.clearInput();

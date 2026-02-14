@@ -1,5 +1,5 @@
 import * as storage from '../app/storage.js';
-import { dispatcher } from '../commands/dispatcher.js';
+import { dispatcher } from '../app/dispatcher.js';
 
 export function injectTestData() {
   const testVariables = {
@@ -16,11 +16,9 @@ export function injectTestData() {
     //'20 print "--------"',
     //'30 goto 10',
 
-    '10 input "What is your name?"; A, B$',
-    '20 print "Hello"; A; B$; ". Welcome to Basic V2!"',
-    '30 rem This is a comment',
-    '40 print "--------"',
-    '50 goto 10',
+    '10 input "Enter 2 Numbers?"; A, B%',
+    '20 print "The sum of " ; A ; " and " ; B% ; " is " ; A + B%',
+    '30 goto 10',
   ];
 
   // inject test prompts
